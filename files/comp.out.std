@@ -1,0 +1,40 @@
+3
+cmp eax, 3
+jl loop
+
+3
+mov ecx, eax
+dec eax
+call comp
+
+6
+push eax
+push ecx
+push ebp
+mov ebp, esp
+mov ebx, 1
+cmp eax, 1
+jle end
+
+3
+pop ebp
+pop ecx
+pop eax
+ret
+
+1
+mov eax, 0
+inc eax
+call comp
+
+3
+mul ebx, ecx
+pop ebp
+pop ecx
+pop eax
+ret
+
+2
+inc eax
+call comp
+
