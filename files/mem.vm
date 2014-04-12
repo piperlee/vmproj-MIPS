@@ -1,9 +1,0 @@
-start:
-	mov eax, 42
-	prn eax
-	push eax
-	mov ebx, 12
-	prn ebx
-	push ebx
-	prn [esp]
-	prn [esp+4]

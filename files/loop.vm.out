@@ -1,6 +1,0 @@
-4096
-inc eax
-cmp eax, 1000|h
-prn eax
-jl loop
-
