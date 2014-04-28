@@ -1,14 +1,14 @@
 package edu.nyu.vmproj.assemble;
 
-public class Constant implements Readable {
+public class Constant<T> implements Readable {
 
-	private Integer constant;
+	private T constant;
 	
-	public Constant(Integer v) {
+	public Constant(T v) {
 		constant = v;
 	}
 	
-	public Integer read() {
+	public T read() {
 		return constant;
 	}
 }

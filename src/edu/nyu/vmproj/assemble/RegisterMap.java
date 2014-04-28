@@ -4,10 +4,16 @@ import java.util.HashMap;
 
 public class RegisterMap {
 	private static RegisterMap instance;
+	// $0-31 value
+	// $pc -> program counter
+	// Long because register will store mem addr, java do not support unsigned int
 	HashMap<String, Integer> regMap;
 	
 	private RegisterMap() {
 		regMap = new HashMap<String, Integer>();
+//		regMap.put("$pc", 0);
+		regMap.put("$0", 0x00000000);
+		regMap.put("$data", 0x10010000);
 	}
 	
 	public static RegisterMap getInstance() {
@@ -16,13 +22,20 @@ public class RegisterMap {
 	}
 	
 	public Integer get(String regName) {
-		if (!regMap.containsKey(regName)) {
-			regMap.put(regName, new Integer(0));
-		}
-		return regMap.get(regName);
+	  OperandFactory opFac = OperandFactory.getInstance();
+    String name = opFac.unifyRegName(regName);
+    return regMap.get(name);
 	}
 	
 	public void put(String regName, Integer value) {
-		regMap.put(regName, value);
+	  OperandFactory opFac = OperandFactory.getInstance();
+	  String name = opFac.unifyRegName(regName);
+		regMap.put(name, value);
+	}
+	
+	public boolean contains(String regName) {
+	  OperandFactory opFac = OperandFactory.getInstance();
+    String name = opFac.unifyRegName(regName);
+    return regMap.containsKey(name);
 	}
 }

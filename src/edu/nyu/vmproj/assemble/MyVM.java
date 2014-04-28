@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Scanner;
 
 
 public class MyVM {
@@ -15,280 +16,195 @@ public class MyVM {
   LabelMap labelMap;
   // mem addr -> value
   Memory memory;
+  // sys call f
   
   OperandFactory oprFact;
   
-  //TODO: for test
+  //for test
   PrintWriter out;
   
-  private void setEIP(Integer i) {
-    regMap.put("eip", new Integer(i));
+  private void setPC(Integer i) {
+    regMap.put("$pc", new Integer(i));
   }
   
-  private void incEIP() {
-    regMap.put("eip", new Integer(regMap.get("eip") + 4));
-  }
-  
-  private void setFLAGS(int v) {
-    regMap.put("flags", new Integer(v));
-  }
-  
-  private int getFLAGS() {
-    return regMap.get("flags");
-  }
-  
-  private void setREMAINDER(int v) {
-    regMap.put("remainder", new Integer(v));
-  }
-  
-  private int getREMAINDER() {
-    return regMap.get("remainder");
+  private void incPC() {
+    regMap.put("$pc", new Integer(regMap.get("$pc") + 4));
   }
   
   private void execute(Instruction inst) {
     String op = inst.getOp();
     // I. Memory
-    if (op.equals("mov")) {
-      Readable rop2 = oprFact.buildRValue(inst.getArg2());
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
+    if (op.equals("li")) {
+      Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+      Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
       wop1.assign(rop2.read());
-      incEIP();
+      incPC();
       return;
     }
     
-    // II. Stack
-    if (op.equals("push")) {
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      memory.push(rop1.read());
-      incEIP();
+    if (op.equals("la")) {
+      Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+      Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+      wop1.assign(rop2.read());
+      incPC();
       return;
     }
     
-    if (op.equals("pop")) {
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(memory.pop());
-      incEIP();
+    if (op.equals("move")) {
+      Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+      Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+      wop1.assign(rop2.read());
+      incPC();
       return;
     }
     
-    if (op.equals("pushf")) {
-      memory.push(regMap.get("flags"));
+    if (op.equals("sw")) {
+      Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+      Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg2());
+      wop1.assign(rop1.read());
+      incPC();
       return;
     }
     
-    if (op.equals("popf")) {
-      setFLAGS(memory.pop());
+    if (op.equals("lw")) {
+      Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+      Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+      wop1.assign(rop1.read());
+      incPC();
       return;
     }
     
-    // III. Calling Conventions
-    if (op.equals("call")) {      
-      memory.push(regMap.get("eip"));
-      setEIP(labelMap.get(inst.getArg1()));
+    if (op.equals("mflo")) {
+      Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+      wop1.assign(regMap.get("$lo"));
+      incPC();
       return;
     }
     
-    if (op.equals("ret")) {
-      setEIP(memory.pop());
-      incEIP();
-      return;
-    }
-    
-    // IV. Arithmetic Operations
-    if (op.equals("inc")) {
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop1.read() + 1);
-      incEIP();
-      return;
-    }
-    
-    if (op.equals("dec")) {
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop1.read() - 1);
-      incEIP();
-      return;
-    }
-    
-    if (op.equals("add")) {
-      Readable rop2 = oprFact.buildRValue(inst.getArg2());
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop1.read() + rop2.read());
-      incEIP();
-      return;
-    }
-    
-    if (op.equals("sub")) {
-      Readable rop2 = oprFact.buildRValue(inst.getArg2());
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop1.read() - rop2.read());
-      incEIP();
-      return;
-    }
-    
-    if (op.equals("mul")) {
-      Readable rop2 = oprFact.buildRValue(inst.getArg2());
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop1.read() * rop2.read());
-      incEIP();
-      return;
-    }
-    
-    if (op.equals("div")) {
-      Readable rop2 = oprFact.buildRValue(inst.getArg2());
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop1.read() / rop2.read());
-      incEIP();
-      return;
-    }
-    
-    if (op.equals("mod")) {
-      Readable rop2 = oprFact.buildRValue(inst.getArg2());
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      setREMAINDER(rop1.read() % rop2.read());
-      incEIP();
-      return;
-    }
-    
-    if (op.equals("rem")) {
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(getREMAINDER());
-      incEIP();
-      return;
-    }
-    
-    // V. Binary Operators
-    if (op.equals("not")) {
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      wop1.assign(~rop1.read());
-      incEIP();
-      return;
-    }
-    
-    if (op.equals("xor")) {
-      Readable rop2 = oprFact.buildRValue(inst.getArg2());
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop1.read() ^ rop2.read());
-      incEIP();
-      return;
-    }
-    
-    if (op.equals("or")) {
-      Readable rop2 = oprFact.buildRValue(inst.getArg2());
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop1.read() | rop2.read());
-      incEIP();
-      return;
-    }
-    
-    if (op.equals("and")) {
-      Readable rop2 = oprFact.buildRValue(inst.getArg2());
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop1.read() & rop2.read());
-      incEIP();
-      return;
-    }
-    
-    if (op.equals("shl")) {
-      Readable rop2 = oprFact.buildRValue(inst.getArg2());
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop1.read() << rop2.read());
-      incEIP();
-      return;
-    }
-    
-    if (op.equals("shr")) {
-      Readable rop2 = oprFact.buildRValue(inst.getArg2());
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      Assignable wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop1.read() >> rop2.read());
-      incEIP();
-      return;
-    }
-    
-    // VI. Comparison
-    if (op.equals("cmp")) {
-      Readable rop2 = oprFact.buildRValue(inst.getArg2());
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      setFLAGS(rop1.read() - rop2.read());
-      incEIP();
-      return;
-    }
-    
-    // VII. Control Flow Manipulation
-    if (op.equals("jmp")) {
-      String label = inst.getArg1();      
-      setEIP(labelMap.get(label));
-      return;
-    }
-    
-    if (op.equals("je")) {
-      String label = inst.getArg1();
-      if (getFLAGS() == 0) {
-        setEIP(labelMap.get(label));
-      } else incEIP();
-      return;
-    }
-    
-    if (op.equals("jne")) {
-      String label = inst.getArg1();
-      if (getFLAGS() != 0) {
-        setEIP(labelMap.get(label));
-      } else incEIP();
-      return;
-    }
-    
-    if (op.equals("jg")) {
-      String label = inst.getArg1();
-      if (getFLAGS() > 0) {
-        setEIP(labelMap.get(label));
-      } else incEIP();
-      return;
-    }
-    
-    if (op.equals("jge")) {
-      String label = inst.getArg1();
-      if (getFLAGS() >= 0) {
-        setEIP(labelMap.get(label));
-      } else incEIP();
-      return;
-    }
-    
-    if (op.equals("jl")) {
-      String label = inst.getArg1();
-      if (getFLAGS() < 0) {
-        setEIP(labelMap.get(label));
-      } else incEIP();
-      return;
-    }
+    // System call
+    // TODO
+    if (op.equals("syscall")) {
+      if (regMap.get("$2") == 1) {
+        // print int
+        System.out.print(regMap.get("$4"));
+      } else if (regMap.get("$2") == 2) {
+        // print float
+        
+      } else if (regMap.get("$2") == 3) {
+        // print double
+        
+      } else if (regMap.get("$2") == 4) {
+        // print string
+        System.out.print(memory.getData(regMap.get("$4")));
+        
+      } else if (regMap.get("$2") == 5) {
+        // read int
+        Scanner in = new Scanner(System.in);
+        regMap.put("$2", in.nextInt());
+        
+      } else if (regMap.get("$2") == 6) {
+        // read float
       
-    if (op.equals("jle")) {
-      String label = inst.getArg1();
-      if (getFLAGS() <= 0) {
-        setEIP(labelMap.get(label));
-      } else incEIP();
+      } else if (regMap.get("$2") == 7) {
+        // read double
+        
+      } else if (regMap.get("$2") == 8) {
+        // read string
+        
+      } else if (regMap.get("$2") == 10) {
+        // exit
+        System.exit(0);
+      }      
+      incPC();
       return;
     }
     
-    // VIII. Input/Output
-    if (op.equals("prn")) {
-      Readable rop1 = oprFact.buildRValue(inst.getArg1());
-      // TODO: for test
-      System.out.println(rop1.read());
-      //out.println(rop1.read());
-      incEIP();
+    // Arithmetic Operations
+    // TODO
+    if (op.equals("add") || op.equals("addi")) {
+      Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg3());
+      Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+      Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+      wop1.assign(rop1.read() + rop2.read());
+      incPC();
       return;
     }
+    
+    if (op.equals("sub") || op.equals("subi")) {
+      Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+      Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+      Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+      wop1.assign(rop1.read() - rop2.read());
+      incPC();
+      return;
+    }
+    
+    if (op.equals("mult")) {
+      Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+      Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+      int lo = ((rop1.read() * rop2.read()) << 32) >> 32;
+      regMap.put("$lo", lo);
+      incPC();
+      return;
+    }
+
+    // Comparison
+    if (op.equals("slti")) {
+      Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+      Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+      Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+      if (rop1.read() < rop2.read()) {
+        wop1.assign(1);
+      } else {
+        wop1.assign(0);
+      }
+      incPC();
+      return;
+    }
+    
+    // Branch
+    if (op.equals("beq")) {
+      Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+      Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+      String label = inst.getArg3();
+      if (rop1.read() == rop2.read()) {
+        setPC(labelMap.get(label));
+      } else {
+        incPC();
+      }
+      return;
+    }
+    
+    // Unconditional Jump
+    // TODO
+    if (op.equals("jr")) {
+      if (labelMap.contains(inst.getArg1())) {
+        setPC(labelMap.get(inst.getArg1()));
+      } else if (regMap.contains(inst.getArg1())){
+        setPC(regMap.get(inst.getArg1()));
+      } else {
+        int addr = Integer.valueOf(inst.getArg1());
+        setPC(addr);
+      }
+      return;
+    }
+    
+    if (op.equals("jal")) {
+      regMap.put("$31", regMap.get("$pc") + 4);
+      if (labelMap.contains(inst.getArg1())) {
+        setPC(labelMap.get(inst.getArg1()));
+      } else if (regMap.contains(inst.getArg1())){
+        setPC(regMap.get(inst.getArg1()));
+      } else {
+        int addr = Integer.valueOf(inst.getArg1());
+        setPC(addr);
+      }
+      return;
+    }
+    
+    // Logical
+    // TODO
+    
   }
   
   public void run(String fileName) {
@@ -296,34 +212,52 @@ public class MyVM {
     regMap = RegisterMap.getInstance();
     prog = Program.getInstance();
     labelMap = LabelMap.getInstance();
-    if (labelMap.contains("start")) {
-      regMap.put("eip", labelMap.get("start"));         
-    }else {
-      regMap.put("eip", new Integer(0));      
-    }
-    regMap.put("esp", new Integer(10000000));
-    regMap.put("ebp", new Integer(10000000));
     memory = Memory.getInstance();
     oprFact = OperandFactory.getInstance();
-    Instruction inst = prog.getInst(regMap.get("eip"));
+    
+    // initialize $pc
+    if (!regMap.regMap.containsKey("$pc")) {
+      if (labelMap.contains("main")) {
+        regMap.put("$pc", labelMap.get("main"));
+      } else {
+        regMap.put("$pc", new Integer(0x00400000)); 
+      }
+    }
+    // initialize stack pointer
+    regMap.put("$29", new Integer(0x7fffffff));
+    // initialize frame pointer
+    regMap.put("$30", new Integer(0x7fffffff));
+        
+    Instruction inst = prog.getInst(regMap.get("$pc"));
     while (inst != null) {
+//      inst.print();
       execute(inst);
-      inst = prog.getInst(regMap.get("eip"));
+      inst = prog.getInst(regMap.get("$pc"));
     }
   }
   
   public static void main(String[] args) throws IOException {
-    if (args.length < 1) {
-      System.out.println("Please input the filename: MyVM <filename>");
-      System.exit(0);
-    } else {
-      String fileName = args[0];
-      //System.out.println("Running "+fileName+".");
-      MyVM vm = new MyVM();
-      //TODO: for test
-      //vm.out = new PrintWriter(new BufferedWriter(new FileWriter(fileName + ".out")));
-      vm.run(fileName);
-      //vm.out.close();
-    }
+//    if (args.length < 1) {
+//      System.out.println("Please input the filename: MyVM <filename>");
+//      System.exit(0);
+//    } else {
+//      String fileName = args[0];
+//      //System.out.println("Running "+fileName+".");
+//      MyVM vm = new MyVM();
+//      //TODO: for test
+//      //vm.out = new PrintWriter(new BufferedWriter(new FileWriter(fileName + ".out")));
+//      vm.run(fileName);
+//      //vm.out.close();
+//    }
+    
+    MyVM vm = new MyVM();
+    
+    // TODO Inptu test file HERE
+    
+//    vm.run("files/factorial.asm");
+    vm.run("files/fact-2.asm");
+//    vm.run("files/hello.asm");
+//    vm.run("files/simple-prog.asm");
+//    vm.run("files/multiples.asm");
   }
 }

@@ -1,5 +1,5 @@
 package edu.nyu.vmproj.assemble;
 
-public interface Readable {
-	public Integer read();
+public interface Readable<T> {
+	public T read();
 }

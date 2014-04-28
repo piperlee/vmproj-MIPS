@@ -1,6 +1,6 @@
 package edu.nyu.vmproj.assemble;
 
-public class MemCell implements Assignable, Readable {
+public class MemCell implements Assignable<Integer>, Readable<Integer> {
 	private Integer address;
 	private Memory memory;
 	
@@ -10,13 +10,23 @@ public class MemCell implements Assignable, Readable {
 	}
 
 	@Override
-	public void assign(Integer v) {
-		memory.put(address, v);
+	public void assign(Integer v) {		
+		RegisterMap regMap = RegisterMap.getInstance();
+		if (address > regMap.get("$29")) {
+		  memory.putStack(address, v);
+		} else {
+		  memory.putData(address, v);
+		}
 	}
 
 	@Override
 	public Integer read() {
-		return memory.get(address);
+	  RegisterMap regMap = RegisterMap.getInstance();
+	  if (address > regMap.get("$29")) {
+      return memory.getStack(address);
+    } else {
+      return (Integer) memory.getData(address);
+    }
 	}
 
 }

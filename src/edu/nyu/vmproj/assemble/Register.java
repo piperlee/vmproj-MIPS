@@ -1,6 +1,6 @@
 package edu.nyu.vmproj.assemble;
 
-public class Register implements Readable, Assignable {
+public class Register implements Readable<Integer>, Assignable<Integer> {
 	private String regName;
 	private RegisterMap regMap;
 	

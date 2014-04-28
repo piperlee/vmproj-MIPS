@@ -1,13 +1,13 @@
 fact:
  
 	slti $t0, $a0, 2	# if i < 2 (i.e i == 1)
-	beq $t0, $zero, cont	# if i >= 2 go to cont
+	beq $t0, $zero, main	# if i >= 2 go to main
 	addi $v0, $zero, 1	# else make the resturn value 1
  
 	jr $ra
  
  
-cont:
+main:
  
 	# OPERATION 1: save into stack
  
