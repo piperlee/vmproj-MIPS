@@ -30,6 +30,9 @@ public class MyVM {
   private void incPC() {
     regMap.put("$pc", new Integer(regMap.get("$pc") + 4));
   }
+  private void incPCplis() {
+	    regMap.put("$pc", new Integer(regMap.get("$pc") + 4));
+	  }
   
   private void execute(Instruction inst) {
     String op = inst.getOp();
@@ -69,10 +72,18 @@ public class MyVM {
     if (op.equals("lw")) {
       Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
       Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop1.read());
+      wop1.assign((int) (Math.pow(2,16)*rop1.read()));
       incPC();
       return;
     }
+    
+    if (op.equals("lui")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop1.read());
+        incPC();
+        return;
+      }
     
     if (op.equals("mflo")) {
       Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
@@ -89,28 +100,29 @@ public class MyVM {
         System.out.print(regMap.get("$4"));
       } else if (regMap.get("$2") == 2) {
         // print float
-        
+    	System.out.print(regMap.get("$f12"));
       } else if (regMap.get("$2") == 3) {
         // print double
-        
+    	  System.out.print(regMap.get("$f12"));
       } else if (regMap.get("$2") == 4) {
         // print string
         System.out.print(memory.getData(regMap.get("$4")));
-        
       } else if (regMap.get("$2") == 5) {
         // read int
         Scanner in = new Scanner(System.in);
         regMap.put("$2", in.nextInt());
-        
       } else if (regMap.get("$2") == 6) {
         // read float
-      
+    	Scanner in = new Scanner(System.in);
+        regMap.put("$f12", (int) in.nextFloat());  
       } else if (regMap.get("$2") == 7) {
         // read double
-        
+    	  Scanner in = new Scanner(System.in);
+          regMap.put("$f12", (int) in.nextDouble());
       } else if (regMap.get("$2") == 8) {
         // read string
-        
+    	Scanner in = new Scanner(System.in);
+    	memory.putData(regMap.get("$4"), in);
       } else if (regMap.get("$2") == 10) {
         // exit
         System.exit(0);
@@ -149,7 +161,7 @@ public class MyVM {
     }
 
     // Comparison
-    if (op.equals("slti")) {
+    if (op.equals("slti")||op.equals("slt")) {
       Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
       Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
       Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
@@ -161,6 +173,19 @@ public class MyVM {
       incPC();
       return;
     }
+    
+    if (op.equals("sltiu")||op.equals("sltu")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        if (rop1.read() < rop2.read()) {
+          wop1.assign(1);
+        } else {
+          wop1.assign(0);
+        }
+        incPC();
+        return;
+      }
     
     // Branch
     if (op.equals("beq")) {
@@ -174,6 +199,19 @@ public class MyVM {
       }
       return;
     }
+  
+    if (op.equals("bne")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+        String label = inst.getArg3();
+        if (rop1.read() != rop2.read()) {
+          setPC(labelMap.get(label));
+        } else {
+          incPC();
+        }
+        return;
+      }
+    
     
     // Unconditional Jump
     // TODO
@@ -187,6 +225,18 @@ public class MyVM {
         setPC(addr);
       }
       return;
+    }
+    
+    if (op.equals("j")) {
+        if (labelMap.contains(inst.getArg1())) {
+          setPC(labelMap.get(inst.getArg1()));
+        } else if (regMap.contains(inst.getArg1())){
+          setPC(regMap.get(inst.getArg1()));
+        } else {
+          int addr = Integer.valueOf(inst.getArg1());
+          setPC(addr);
+        }
+        return;
     }
     
     if (op.equals("jal")) {
@@ -204,8 +254,42 @@ public class MyVM {
     
     // Logical
     // TODO
+    if(op.equals("and")){
+    	Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop1.read() & rop2.read());
+        incPC();
+        return;
+    }
     
-  }
+    if(op.equals("or")){
+    	Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop1.read() | rop2.read());
+        incPC();
+        return;
+    }
+	
+    if(op.equals("sll")){
+    	Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop1.read() << rop2.read());
+        incPC();
+        return;
+	}
+	
+    if(op.equals("srl")){
+    	Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop1.read() >> rop2.read());
+        incPC();
+        return;
+	}    
+}
   
   public void run(String fileName) {
     Program.initialize(fileName);
