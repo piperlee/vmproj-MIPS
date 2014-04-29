@@ -20,12 +20,12 @@ sum_loop:
         lb      $t1, ($t0)              #  load the byte at  addr S into $t1,
         addu    $t0, $t0, 1             #  and  increment S.
 
-        ##  use   10  instead of  ’\n’ due  to SPIM bug!
+        ##  use   10  instead of  ���\n��� due  to SPIM bug!
         beq     $t1, 10, end_sum_loop   #  if $t1==\n,  branch out   of  loop.
 
         mul     $t2, $t2, 10            # t2 *= 10.
                                                             
-        sub     $t1, $t1, ’0’           # t1 -= ’0’.
+        sub     $t1, $t1, '0'           # t1 -= ���0���.
         add     $t2, $t2, $t1           # t2 += t1.
         b       sum_loop                # and  repeat the loop.
 

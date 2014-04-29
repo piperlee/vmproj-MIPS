@@ -30,9 +30,6 @@ public class MyVM {
   private void incPC() {
     regMap.put("$pc", new Integer(regMap.get("$pc") + 4));
   }
-  private void incPCplis() {
-	    regMap.put("$pc", new Integer(regMap.get("$pc") + 4));
-	  }
   
   private void execute(Instruction inst) {
     String op = inst.getOp();
@@ -43,6 +40,22 @@ public class MyVM {
       wop1.assign(rop2.read());
       incPC();
       return;
+    }
+    
+    if(op.equals("li.s")||op.equals("li.d")){
+    	//TODO: 读取label的数据
+    	/*if (labelMap.contains(inst.getArg2())) {
+    		setPC(labelMap.get(inst.getArg2()));
+    		} else if (regMap.contains(inst.getArg1())){
+    			setPC(regMap.get(inst.getArg1()));
+    			} else {
+    				int addr = Integer.valueOf(inst.getArg1());
+    				setPC(addr);
+    				}
+    		incPC();
+    	*/
+    	//regMap.put("$31", regMap.get("$pc") + 4);
+        return;
     }
     
     if (op.equals("la")) {
@@ -70,17 +83,17 @@ public class MyVM {
     }
     
     if (op.equals("lw")) {
-      Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
-      Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign((int) (Math.pow(2,16)*rop1.read()));
-      incPC();
-      return;
+    	Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop1.read());
+        incPC();
+        return;
     }
     
     if (op.equals("lui")) {
         Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
         Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
-        wop1.assign(rop1.read());
+        wop1.assign((int) (Math.pow(2,16)*rop1.read()));
         incPC();
         return;
       }
@@ -159,7 +172,291 @@ public class MyVM {
       incPC();
       return;
     }
+    
+    if (op.equals("mul")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop1.read() * rop2.read());
+        incPC();
+        return;
+    }
 
+    if (op.equals("div")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+        int lo = ((rop1.read() / rop2.read()) << 32) >> 32;
+        int hi = ((rop1.read() % rop2.read()) << 32) >> 32;
+        regMap.put("$lo", lo);
+        regMap.put("$hi", hi);
+        incPC();
+        return;
+    }
+    
+    if(op.equals("mfc0")){
+    	//Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop2.read());
+        incPC();
+        return;
+    }
+    
+    // Floating Point Arithmetic
+    if (op.equals("add.s")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop1.read() + rop2.read());
+        incPC();
+        return;
+    }
+    
+    if (op.equals("sub.s")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop1.read() - rop2.read());
+        incPC();
+        return;
+    }
+    
+    if (op.equals("mul.s")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        int lo = ((rop1.read() * rop2.read()) << 32) >> 32;
+        regMap.put("$lo", lo);
+        incPC();
+        return;
+    }
+    
+    if (op.equals("div.s")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        int lo = ((rop1.read() / rop2.read()) << 32) >> 32;
+        regMap.put("$lo", lo);
+        incPC();
+        return;
+    }
+    
+    // The double part!
+    if (op.equals("add.d")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop1.read() + rop2.read());
+        incPC();
+        return;
+    }
+    
+    if (op.equals("sub.d")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop1.read() - rop2.read());
+        incPC();
+        return;
+    }
+    
+    if (op.equals("mul.d")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+        int lo = ((rop1.read() * rop2.read()) << 32) >> 32;
+        regMap.put("$lo", lo);
+        incPC();
+        return;
+    }
+    
+    if (op.equals("div.d")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg3());
+        int lo = ((rop1.read() / rop2.read()) << 32) >> 32;
+        regMap.put("$lo", lo);
+        incPC();
+        return;
+    }
+    // Floating part - Data transfer
+    if (op.equals("lwc1")) {
+    	Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg1());
+        wop1.assign(rop1.read());
+        incPC();
+        return;
+    }
+    if (op.equals("swc1")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+        Assignable<Integer> wop1 = oprFact.buildLValue(inst.getArg2());
+        wop1.assign(rop1.read());
+        incPC();
+        return;
+    }
+    // Floating part - Branch
+    if(op.equals("bc1t")){
+    	if(regMap.get("$cond")==1){
+    		if (labelMap.contains(inst.getArg1())) {
+    	          setPC(labelMap.get(inst.getArg1()));
+    	        } else if (regMap.contains(inst.getArg1())){
+    	          setPC(regMap.get(inst.getArg1()));
+    	        } else {
+    	          int addr = Integer.valueOf(inst.getArg1());
+    	          setPC(addr);
+    	        }
+    	}else{
+    		incPC();
+    	}
+    	//regMap.put("$31", regMap.get("$pc") + 4);
+        return;
+    }
+    if(op.equals("bc1f")){
+    	if(regMap.get("$cond")==0){
+    		if (labelMap.contains(inst.getArg1())) {
+    	          setPC(labelMap.get(inst.getArg1()));
+    	        } else if (regMap.contains(inst.getArg1())){
+    	          setPC(regMap.get(inst.getArg1()));
+    	        } else {
+    	          int addr = Integer.valueOf(inst.getArg1());
+    	          setPC(addr);
+    	        }
+    	}else{
+    		incPC();
+    	}
+    	//regMap.put("$31", regMap.get("$pc") + 4);
+        return;
+    }
+	if(op.equals("c.eq.s")){
+		Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+		Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+		if (rop1.read() == rop2.read()) {
+        	regMap.put("$cond", 1);
+        } else {
+        	regMap.put("$cond", 0);
+        }
+        incPC();
+        return;
+	}
+	if(op.equals("c.ne.s")){
+		Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+		Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+		if (rop1.read() != rop2.read()) {
+        	regMap.put("$cond", 1);
+        } else {
+        	regMap.put("$cond", 0);
+        }
+        incPC();
+        return;
+	}
+	if(op.equals("c.lt.s")){
+		Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+		Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+		if (rop1.read() < rop2.read()) {
+        	regMap.put("$cond", 1);
+        } else {
+        	regMap.put("$cond", 0);
+        }
+        incPC();
+        return;
+	}
+	if(op.equals("c.le.s")){
+		Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+		Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+		if (rop1.read() <= rop2.read()) {
+        	regMap.put("$cond", 1);
+        } else {
+        	regMap.put("$cond", 0);
+        }
+        incPC();
+        return;
+	}
+	if(op.equals("c.gt.s")){
+		Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+		Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+		if (rop1.read() > rop2.read()) {
+        	regMap.put("$cond", 1);
+        } else {
+        	regMap.put("$cond", 0);
+        }
+        incPC();
+        return;
+	}
+	if(op.equals("c.ge.s")){
+		Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+		Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+		if (rop1.read() >= rop2.read()) {
+        	regMap.put("$cond", 1);
+        } else {
+        	regMap.put("$cond", 0);
+        }
+        incPC();
+        return;
+	}
+	if(op.equals("c.eq.d")){
+		Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+		Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+		if (rop1.read() == rop2.read()) {
+        	regMap.put("$cond", 1);
+        } else {
+        	regMap.put("$cond", 0);
+        }
+        incPC();
+        return;
+	}
+	if(op.equals("c.ne.d")){
+		Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+		Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+		if (rop1.read() != rop2.read()) {
+        	regMap.put("$cond", 1);
+        } else {
+        	regMap.put("$cond", 0);
+        }
+        incPC();
+        return;
+	}
+	if(op.equals("c.lt.d")){
+		Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+		Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+		if (rop1.read() < rop2.read()) {
+        	regMap.put("$cond", 1);
+        } else {
+        	regMap.put("$cond", 0);
+        }
+        incPC();
+        return;
+	}
+	if(op.equals("c.le.d")){
+		Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+		Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+		if (rop1.read() <= rop2.read()) {
+        	regMap.put("$cond", 1);
+        } else {
+        	regMap.put("$cond", 0);
+        }
+        incPC();
+        return;
+	}
+	if(op.equals("c.gt.d")){
+		Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+		Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+		if (rop1.read() > rop2.read()) {
+        	regMap.put("$cond", 1);
+        } else {
+        	regMap.put("$cond", 0);
+        }
+        incPC();
+        return;
+	}
+	if(op.equals("c.ge.d")){
+		Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+		Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+		if (rop1.read() >= rop2.read()) {
+        	regMap.put("$cond", 1);
+        } else {
+        	regMap.put("$cond", 0);
+        }
+        incPC();
+        return;
+	}
+    
+    
     // Comparison
     if (op.equals("slti")||op.equals("slt")) {
       Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg2());
@@ -185,7 +482,7 @@ public class MyVM {
         }
         incPC();
         return;
-      }
+    }
     
     // Branch
     if (op.equals("beq")) {
@@ -212,6 +509,17 @@ public class MyVM {
         return;
       }
     
+    if (op.equals("blez")) {
+        Readable<Integer> rop1 = oprFact.buildRValue(inst.getArg1());
+        //Readable<Integer> rop2 = oprFact.buildRValue(inst.getArg2());
+        String label = inst.getArg2();
+        if (rop1.read() <= 0) {
+          setPC(labelMap.get(label));
+        } else {
+          incPC();
+        }
+        return;
+      }
     
     // Unconditional Jump
     // TODO
@@ -336,12 +644,16 @@ public class MyVM {
     
     MyVM vm = new MyVM();
     
-    // TODO Inptu test file HERE
-    
-//    vm.run("files/factorial.asm");
-    vm.run("files/fact-2.asm");
-//    vm.run("files/hello.asm");
-//    vm.run("files/simple-prog.asm");
-//    vm.run("files/multiples.asm");
+    // TODO Input test file HERE
+
+//   vm.run("files/add2.asm");
+//   vm.run("files/hello.asm");
+//   vm.run("files/simple-prog.asm");
+//   vm.run("files/fact-2.asm");
+
+//   vm.run("files/atoi-1.asm");//NumberFormatException
+//   vm.run("files/factorial.asm");//NullPointerException
+//   vm.run("files/multiples.asm");//修改了getArg()23，可以运行，结果不对
+//   vm.run("files/palindrome.asm");//NumberFormatException
   }
 }
