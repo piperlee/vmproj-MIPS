@@ -10,11 +10,17 @@
 
 main:
         ## Get first number from user, put   into $t0.
+        la      $a0, typeina
+        li      $v0, 4
+        syscall
         li      $v0, 5          #  load syscall  read_int into $v0.
         syscall                 #  make the syscall.
         move    $t0, $v0        #  move the number  read into $t0.
 
         ## Get second number  from  user, put into $t1.
+        la      $a0, typeinb
+        li      $v0, 4
+        syscall
         li      $v0, 5          #  load syscall  read_int into $v0.
         syscall                 #  make the syscall.
         move    $t1, $v0        #  move the number  read into $t1.
@@ -22,11 +28,19 @@ main:
         add     $t2, $t0, $t1   #  compute  the  sum.
 
         ##  Print out   $t2.
+        la      $a0, sum
+        li      $v0, 4
+        syscall
         move    $a0, $t2        #  move the number  to print into $a0.
         li      $v0, 1          #  load syscall  print_int  into $v0.
         syscall                 #  make the syscall.
 
         li      $v0, 10         #  syscall code  10  is for exit.
         syscall                 #  make the syscall.
+
+.data
+typeina: .asciiz "Please Type in the First Int:\n"
+typeinb: .asciiz "Please Type in the Second Int:\n"
+sum:     .asciiz "The sum is:\n"
 
 ##  end  of  add2.asm.
