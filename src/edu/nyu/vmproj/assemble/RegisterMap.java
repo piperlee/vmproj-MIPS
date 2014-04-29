@@ -38,4 +38,10 @@ public class RegisterMap {
     String name = opFac.unifyRegName(regName);
     return regMap.containsKey(name);
 	}
+	
+	public boolean validRegister(String regName) {
+	  OperandFactory opFac = OperandFactory.getInstance();
+    String name = opFac.unifyRegName(regName);
+    return opFac.regNameMap.containsValue(name);
+	}
 }

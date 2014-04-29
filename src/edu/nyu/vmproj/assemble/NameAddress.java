@@ -1,6 +1,6 @@
 package edu.nyu.vmproj.assemble;
 
-public class NameAddress implements Readable<Integer>,Assignable<Integer>{
+public class NameAddress implements Readable<Object>,Assignable<Object>{
   private String name;
   private Program prog;
   
@@ -10,8 +10,8 @@ public class NameAddress implements Readable<Integer>,Assignable<Integer>{
   }
   
   @Override
-  public void assign(Integer v) {
-    prog.symbolTable.put(name, v);
+  public void assign(Object v) {
+    prog.symbolTable.put(name, (Integer)v);
   }
 
   @Override

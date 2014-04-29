@@ -1,6 +1,6 @@
 package edu.nyu.vmproj.assemble;
 
-public class Register implements Readable<Integer>, Assignable<Integer> {
+public class Register implements Readable<Object>, Assignable<Object> {
 	private String regName;
 	private RegisterMap regMap;
 	
@@ -10,8 +10,8 @@ public class Register implements Readable<Integer>, Assignable<Integer> {
 	}
 	
 	@Override
-	public void assign(Integer v) {
-		regMap.put(regName, v);
+	public void assign(Object v) {
+		regMap.put(regName, (Integer)v);
 	}
 
 	@Override

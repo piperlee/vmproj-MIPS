@@ -7,7 +7,7 @@ public class OperandFactory {
 	private static OperandFactory instance;
 	// $zero -> $0
 	// unify to $n
-	private HashMap<String,String> regNameMap;
+	HashMap<String,String> regNameMap;
 	private RegisterMap regMap;
 	
 	private OperandFactory() {
@@ -45,7 +45,41 @@ public class OperandFactory {
     regNameMap.put("$gp", "$28");
     regNameMap.put("$sp", "$29");
     regNameMap.put("$fp", "$30");
-    regNameMap.put("$ra", "$31");		
+    regNameMap.put("$ra", "$31");
+    // floating registers
+    regNameMap.put("$f0", "$f0");
+    regNameMap.put("$f1", "$f1");
+    regNameMap.put("$f2", "$f2");
+    regNameMap.put("$f3", "$f3");
+    regNameMap.put("$f4", "$f4");
+    regNameMap.put("$f5", "$f5");
+    regNameMap.put("$f6", "$f6");
+    regNameMap.put("$f7", "$f7");
+    regNameMap.put("$f8", "$f8");
+    regNameMap.put("$f9", "$f9");
+    regNameMap.put("$f10", "$f10");
+    regNameMap.put("$f11", "$f11");
+    regNameMap.put("$f12", "$f12");
+    regNameMap.put("$f13", "$f13");
+    regNameMap.put("$f14", "$f14");
+    regNameMap.put("$f15", "$f15");
+    regNameMap.put("$f16", "$f16");
+    regNameMap.put("$f17", "$f17");
+    regNameMap.put("$f18", "$f18");
+    regNameMap.put("$f19", "$f19");
+    regNameMap.put("$f20", "$f20");
+    regNameMap.put("$f21", "$f21");
+    regNameMap.put("$f22", "$f22");
+    regNameMap.put("$f23", "$f23");
+    regNameMap.put("$f24", "$f24");
+    regNameMap.put("$f25", "$f25");
+    regNameMap.put("$f26", "$f26");
+    regNameMap.put("$f27", "$f27");
+    regNameMap.put("$f28", "$f28");
+    regNameMap.put("$f29", "$f29");
+    regNameMap.put("$f30", "$f30");
+    regNameMap.put("$f31", "$f31");
+    
 	}
 	
 	public static OperandFactory getInstance() {
@@ -111,13 +145,17 @@ public class OperandFactory {
 	  return regNameMap.containsKey(ls)?regNameMap.get(ls):ls;
 	}
 	
+	// 100($r)
+	// ($r)
 	private MemCell buildMemCell(String s) {
 	  int i = s.indexOf('(');
 	  int j = s.indexOf(')');
 	  int offset = 0;
 	  if (i > 0) {
-	     offset = new BigDecimal(s.substring(0, i)).intValue();
-	  } 
+	    offset = new BigDecimal(s.substring(0, i)).intValue();
+	  } else if ( i == 0 ) {
+	    offset = 0;
+	  }
 	  String reg = unifyRegName(s.substring(i+1,j));
 	  int address = regMap.get(reg) + offset;
 		return new MemCell(address);
@@ -128,6 +166,11 @@ public class OperandFactory {
 		return new Constant<Integer>(val);
 	}
 	
+	private Constant<Float> buildFloatConstant(String s) {
+    float val = new BigDecimal(s).floatValue();
+    return new Constant<Float>(val);
+  }
+		
 	private Register buildRegister(String s) {
 	  s = unifyRegName(s.toLowerCase());
 		return new Register(s);
@@ -137,7 +180,7 @@ public class OperandFactory {
 	  return new NameAddress(s);
 	}
 	
-	public Assignable<Integer> buildLValue(String s) {
+	public Assignable<Object> buildLValue(String s) {
 		if (isRegOpr(s)) return buildRegister(s);
 		else if (isMemOpr(s)) return buildMemCell(s);
 		else if (isNameOpr(s)) return buildNameAddress(s);
@@ -145,10 +188,12 @@ public class OperandFactory {
 	}
 	
 	@SuppressWarnings("unchecked")
-  public Readable<Integer> buildRValue(String s) {
+  public Readable<Object> buildRValue(String s) {
 		if (isRegOpr(s)) return buildRegister(s);
 		else if (isMemOpr(s)) return buildMemCell(s);
 		else if (isNameOpr(s)) return buildNameAddress(s);
-		else return buildIntConstant(s);
+		else if (Util.isInteger(s)) return buildIntConstant(s);
+		else if (Util.isFloat(s)) return buildFloatConstant(s);
+		return null;
 	}
 }
