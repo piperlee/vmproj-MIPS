@@ -4,13 +4,24 @@
 ##         add them and print,
 ##         multiple them and print.
 ## Registers used:
-##      $f0 - used to hold the first number.
+##      $f0 - used to hold the value stored into memory.
+##      $f3 - used to hold the value fetched from memory.
 ##      $f1 - used to hold the second number.
 ##      $f2 - used to hold the sum of the $t1 and $t2.
 ##      $v0 - syscall parameter and return value.
 ##      $a0 - syscall parameter.
 
 main:        
+
+		#  Test the load/store word coprocessor command first.
+		li      $2,  546      # $2 has the memory addr of 546
+		li.s    $f0, c        # c has the value 4.4
+		swc1    $f0, 100($2)
+		lwc1    $f3, 100($2)
+		li.s    $f12,$f3
+		li      $v0, 2 
+		syscall               # if "4.4" is printed out, the lwc1/swc1 works!
+
         # Print a and b
         li.s    $f12,a        # load float a to $12 to be printed
         la      $a0, avalue
@@ -86,6 +97,7 @@ notequal:
 .data 
 a: .float 1.5
 b: .float 2.2 
+c: .float 4.4
 avalue: .asciiz "The value of a:\n"
 bvalue: .asciiz "The value of b:\n"
 addresult: .asciiz "Add. of a+b:\n"
