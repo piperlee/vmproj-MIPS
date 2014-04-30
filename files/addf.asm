@@ -13,30 +13,80 @@ main:
         # $f2 - sum of terms
         # Evaluate the quadratic
         
-        li.s $f0, x               # 从label x中load数据是用move吗?????
-        li.s $f2, a               # sum = a
-        mul.s $f2, $f2, $f0       # sum = ax
+        la   $a0, valuex
+        li   $v0, 4
+        syscall
+        li.s $f0, x             # 
+        li.s $f12,x  			#
+        li   $v0, 2
+        syscall
+        la      $a0, newline    # new line
+        li      $v0, 4
+        syscall
+            
+        la    $a0, valuea
+        li    $v0, 4
+        syscall
+        li.s  $f2, a               # sum = a
+        li.s  $f12,a
+        li   $v0, 2
+        syscall
+        la      $a0, newline    # new line
+        li      $v0, 4
+        syscall
+        mul.s $f2, $f2, $f0       # sum = ax, $f2
 
+		la    $a0, valueb
+        li    $v0, 4
+        syscall
         li.s $f4, b               # get b
+        li.s  $f12,b
+        li   $v0, 2
+        syscall
+        la      $a0, newline    # new line
+        li      $v0, 4
+        syscall
         add.s $f2, $f2, $f4       # sum = ax + b 
         mul.s $f2, $f2, $f0       # sum = (ax + b) = ax^2 + bx
 
+
+		la    $a0, valuec
+        li    $v0, 4
+        syscall
         li.s $f4, c               # get c
+        li.s  $f12,c
+        li   $v0, 2
+        syscall
+        la      $a0, newline    # new line
+        li      $v0, 4
+        syscall
+        la    $a0, valuesum
+        li    $v0, 4
+        syscall
         add.s $f2, $f2, $f4       # sum = ax^2 + bx + c = 11.9
-
-        c.lt.s $f2, 12.0
-        bc1t true_label
-        bc1f false_label
-
-true_label:
-        li.s $f12, $f2       # case true, printf the sum
-        li $v0, 2
+        li.s  $f12, $f2
+        li   $v0, 2
         syscall
 
-false_label:
-        li.s $f12, 0.0       # 0.0 stands for false        
-        li $v0, 2
-        syscall
+		# Exit the program
+        li      $v0, 10         #  syscall code  10  is for exit.
+        syscall                 #  make the syscall.
+		
+
+#		li.s  $f6, y
+#       c.lt.s $f2, $f6
+#       bc1t true_label
+#       bc1f false_label
+
+#true_label:
+#        li.s $f12, $f2       # case true, printf the sum
+#        li $v0, 2
+#        syscall
+
+#false_label:
+#        li.s $f12, 0.0       # 0.0 stands for false        
+#       li $v0, 2
+#       syscall
 
 
 
@@ -46,5 +96,13 @@ a: .float 1.5
 b: .float 2.2 
 c: .float 1.5
 x: .float 2.0
+y: .float 12.0
+
+newline: .asciiz "\n"
+valuex: .asciiz "The Value of x: "
+valuea: .asciiz "The Value of a: "
+valueb: .asciiz "The Value of b: "
+valuec: .asciiz "The Value of c: "
+valuesum: .asciiz "The Sum of ax^2+bx+c is: "
 
 ##  end  of  addf.asm.
