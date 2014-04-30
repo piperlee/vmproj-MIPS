@@ -113,6 +113,13 @@ public class MyVM {
       return;
     }
     
+    if (op.equals("mfhi")) {
+      Assignable<Object> wop1 = oprFact.buildLValue(inst.getArg1());
+      wop1.assign(regMap.get("$hi"));
+      incPC();
+      return;
+    }
+    
     if(op.equals("mfc0")){
       Readable<Object> rop2 = oprFact.buildRValue(inst.getArg2());
       Assignable<Object> wop1 = oprFact.buildLValue(inst.getArg1());
