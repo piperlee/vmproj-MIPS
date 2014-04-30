@@ -11,10 +11,16 @@
         .text
 main:
         ## read A into $t0, B into $t1. 
+        la      $a0, typeina
+        li      $v0, 4
+        syscall
         li      $v0, 5               # syscall 5 = read_int 
         syscall
         move    $t0, $v0             # A = integer just read
 
+		la      $a0, typeinb
+		li      $v0, 4
+		syscall
         li      $v0, 5               # syscall 5
         syscall
         move    $t1, $v0             # B = integer just read
@@ -25,6 +31,9 @@ main:
         move    $t3, $t0             # m = A
 
 loop:
+		la      $a0, printmul
+		li      $v0, 4
+		syscall
         move    $a0, $t3             # print m.
         li      $v0, 1               # syscall 1 = print_int    
         syscall                      # make the syscall
@@ -49,6 +58,9 @@ exit:
 ## Here's where the data for this program is stroed:
         .data
 space:          .asciiz " "
-newline:        .asciiz "\n"
+newline:        .asciiz "\nAll Multiplies Are Printed."
+printmul: .asciiz "\nHere's a multiply:"
+typeina: .asciiz "Pls Type in the First Int:"
+typeinb: .asciiz "Pls Type in the Second Int:"
 
 ## end of the multiples.asm

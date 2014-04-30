@@ -28,5 +28,9 @@ public class MemCell implements Assignable<Object>, Readable<Object> {
       return memory.getData(address);
     }
 	}
+	
+	public Integer getAddr() {
+	  return address;
+	}
 
 }

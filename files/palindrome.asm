@@ -11,6 +11,9 @@
 
         .text
 main:                                 #  SPIM starts by  jumping   to main.
+        la         $a0, enter_msg
+        li         $v0,  4
+        syscall
                                       ##  read the string  S:
         la      $a0, string_space
         li      $a1, 1024
@@ -57,7 +60,8 @@ exit:                                                 ##  exit  the program:
 ##  Here’s where  the data for this  program   is stored:
                    .data
 string_space:      .space   1024                         #  reserve 1024  bytes for the string.
-is_palin_msg:      .asciiz  "The  string is a  palindrome.\n"
-not_palin_msg:     .asciiz  "The  string is not  a  palindrome.\n"
+is_palin_msg:      .asciiz  "The string is a palindrome.\n"
+not_palin_msg:     .asciiz  "The string is not a palindrome.\n"
+enter_msg:         .asciiz  "Enter a String: " 
 
 ##  end  of  palindrome.asm

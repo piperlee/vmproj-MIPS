@@ -142,4 +142,28 @@ public class Memory {
 	  }
     return dataMap.get(k);
 	}
+	
+	public Byte getDataByte(Integer k) {
+	  if (!dataMap.containsKey(k)) {
+      System.err.println("Memory "+k+" is not found!");
+      System.exit(-1) ;
+    }
+	  return dataMap.get(k);
+	}
+	
+	public int getWord (Integer k) {
+	  RegisterMap regMap = RegisterMap.getInstance();
+	  if ( k >= regMap.get("$29")) {
+      return getStack(k);
+    } else {
+      if (!dataMap.containsKey(k) || !dataMap.containsKey(k+1)
+          || !dataMap.containsKey(k+2) || !dataMap.containsKey(k+3)) {
+        System.err.println("Memory "+k+" is not found!");
+        System.exit(-1);;
+      }
+      byte [] bytes = new byte[]
+            { dataMap.get(k),dataMap.get(k+1),dataMap.get(k+2),dataMap.get(k+3) };
+      return Util.toInt(bytes); 
+    }
+	}
 }
