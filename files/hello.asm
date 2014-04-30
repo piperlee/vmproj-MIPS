@@ -6,7 +6,8 @@
 ##5 $a0 - syscall parameter-- the string to print.
 
         .text
-main:
+        .globl __start
+__start:
         la     $a0, hello_msg  #load the addr of hello_msg into $a0
         li     $v0, 4          # 4 is the print_string syscall
         syscall

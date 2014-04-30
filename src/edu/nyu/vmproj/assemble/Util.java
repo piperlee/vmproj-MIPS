@@ -35,7 +35,7 @@ public class Util {
   public static String getPairedRegName(String regName) throws Exception {
     OperandFactory opFac = OperandFactory.getInstance(); 
     String name = regName.toLowerCase();
-    if (opFac.regNameMap.containsKey(name) || regName.charAt(1) != 'f') {
+    if (!opFac.regNameMap.containsKey(name) || regName.charAt(1) != 'f') {
       throw new Exception ("float reg name error");
     }
     Integer idx = Integer.valueOf(name.substring(2));

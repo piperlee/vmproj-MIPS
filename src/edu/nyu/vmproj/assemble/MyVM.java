@@ -40,7 +40,8 @@ public class MyVM {
   
   private void execute(Instruction inst) {
     String op = inst.getOp();
-    // I. Memory
+    
+    // Memory
     if (op.equals("li")) {
       Readable<Object> rop2 = oprFact.buildRValue(inst.getArg2());
       Assignable<Object> wop1 = oprFact.buildLValue(inst.getArg1());
@@ -49,10 +50,11 @@ public class MyVM {
       return;
     }
     
+    // load address
     if (op.equals("la")) {
       Readable<Object> rop2 = oprFact.buildRValue(inst.getArg2());
       Assignable<Object> wop1 = oprFact.buildLValue(inst.getArg1());
-      wop1.assign(rop2.read());
+      wop1.assign(rop2.read());      
       incPC();
       return;
     }
@@ -132,18 +134,23 @@ public class MyVM {
       incPC();
       return;
     }
+    
     if (op.equals("swc1")) {
       Readable<Object> rop1 = oprFact.buildRValue(inst.getArg1());
       Assignable<Object> wop1 = oprFact.buildLValue(inst.getArg2());
-      wop1.assign(rop1.read());
+      if (wop1 instanceof MemCell) {   
+        wop1.assign(rop1.read());
+      } else {
+        runningErr(inst);
+      }
       incPC();
       return;
     }
     
     // Pseudo
     //lwc1 $f1,100($2)
-    //li.s   fd,val
-    if (op.equals("li.s")) {
+    //l.s   fd,val
+    if (op.equals("l.s")) {
       if (Util.isFloat(inst.getArg2())) {
         Assignable<Object> wop1 = oprFact.buildLValue(inst.getArg1());
         Float f = Float.parseFloat(inst.getArg2());
@@ -161,6 +168,50 @@ public class MyVM {
         Assignable<Object> wop1 = oprFact.buildLValue(inst.getArg1());
         Readable<Object> rop1 = oprFact.buildRValue(inst.getArg2());
         wop1.assign(rop1.read());  
+        
+      } else {
+        runningErr(inst);
+      }
+      incPC();
+      return;
+    }
+    
+    if (op.equals("l.d")) {
+      Assignable<Object> wop1 = oprFact.buildLValue(inst.getArg1());
+      Assignable<Object> wop2 = null;
+      try {
+        wop2 = oprFact.buildLValue(Util.getPairedRegName(inst.getArg1()));
+      } catch (Exception e) {
+        System.err.println(e.getMessage());
+        System.exit(-1);
+      }
+      if (Util.isDouble(inst.getArg2())) {
+        double d = Double.parseDouble(inst.getArg2());
+        long bits = Double.doubleToLongBits(d);
+        int low = (int) bits; 
+        int high = (int) (bits >> 32);
+        wop1.assign(high);
+        wop2.assign(low);        
+      } else if (prog.symbolTable.containsKey(inst.getArg2())) {
+        int addr = prog.symbolTable.get(inst.getArg2());
+        double d = (Double)memory.getData(addr);
+        long bits = Double.doubleToLongBits(d);
+        int low = (int) bits; 
+        int high = (int) (bits >> 32);
+        wop1.assign(high);
+        wop2.assign(low);
+      
+      } else if (regMap.validRegister(inst.getArg2())) { 
+        Readable<Object> rop1 = oprFact.buildRValue(inst.getArg2());
+        Readable<Object> rop2 = null;
+        try {
+          rop2 = oprFact.buildRValue(Util.getPairedRegName(inst.getArg2()));
+        } catch (Exception e) {
+          System.err.println(e.getMessage());
+          System.exit(-1);
+        }        
+        wop1.assign(rop1.read());
+        wop2.assign(rop2.read());
         
       } else {
         runningErr(inst);
@@ -215,6 +266,14 @@ public class MyVM {
       	e.t = TYPE.STRING;
       	memory.putData(regMap.get("$4"), input);
       	
+      } else if (regMap.get("$2") == 9) {
+        // allocate mem
+        int size = regMap.get("$4"); 
+        int addr = regMap.get("$2");
+        SymbolEntry e = new SymbolEntry ("",size, addr);
+        prog.symbolAddrMap.put(addr, e);
+        memory.newSpace(size);
+        
       } else if (regMap.get("$2") == 10) {
         // exit
         System.exit(0);
@@ -393,9 +452,13 @@ public class MyVM {
         System.err.println(e.getMessage());
         System.exit(-1);
       }
-      long l1 = (((long)rop1.read()) << 32) | (((long)rop2.read() & 0xffffffffL));
+      int irop1 = (int)rop1.read();
+      int irop2 = (int)rop2.read();
+      int irop3 = (int)rop3.read();
+      int irop4 = (int)rop4.read();
+      long l1 = (((long)irop1)<< 32) | (((long)irop2 & 0xffffffffL));
       double d1 = Double.longBitsToDouble(l1);
-      long l2 = (((long)rop3.read()) << 32) | (((long)rop4.read() & 0xffffffffL));
+      long l2 = (((long)irop3) << 32) | (((long)irop4 & 0xffffffffL));
       double d2 = Double.longBitsToDouble(l2);
       
       long l3 = Double.doubleToLongBits(d1 * d2);
@@ -1111,7 +1174,9 @@ public class MyVM {
     
     // initialize $pc
     if (!regMap.regMap.containsKey("$pc")) {
-      if (labelMap.contains("main")) {
+      if (labelMap.contains("__start")) {
+        regMap.put("$pc", labelMap.get("__start"));
+      } else if (labelMap.contains("main")) {
         regMap.put("$pc", labelMap.get("main"));
       } else {
         regMap.put("$pc", new Integer(0x00400000)); 
@@ -1153,11 +1218,14 @@ public class MyVM {
     // TODO Input test file HERE
 //   vm.run("files/hello.asm");
 //   vm.run("files/simple-prog.asm");
-//   vm.run("files/fact-2.asm");
-//   vm.run("files/multiples.asm");
+//   vm.run("files/funcall_factorial.asm");
+//   vm.run("files/int_arithmatic.asm");
+//   vm.run("files/float_arithmatic.asm");
+   vm.run("files/double_arithmatic.asm");
 //   vm.run("files/io_string.asm");
 //   vm.run("files/io_float_double.asm");
-   vm.run("files/float_arithmatic.asm");    
+//    vm.run("files/fib_array.asm");
+
 //   vm.run("files/printf.asm"); 
 //   vm.run("files/palindrome.asm");
 

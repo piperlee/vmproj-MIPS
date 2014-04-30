@@ -7,8 +7,9 @@
 ##      $t2 - used to hold the sum of the $t1 and $t2.
 ##      $v0 - syscall parameter and return value. $a0 - syscall parameter.
 ##      $a0 - syscall parameter.
-
-main:
+.text
+.globl __start
+__start:
         # $f0 - x
         # $f2 - sum of terms
         # Evaluate the quadratic
@@ -16,8 +17,8 @@ main:
         la   $a0, valuex
         li   $v0, 4
         syscall
-        li.s $f0, x             # 
-        li.s $f12,x  			#
+        l.s $f0, x             # 
+        l.s $f12,x  			#
         li   $v0, 2
         syscall
         la      $a0, newline    # new line
@@ -27,8 +28,8 @@ main:
         la    $a0, valuea
         li    $v0, 4
         syscall
-        li.s  $f2, a               # sum = a
-        li.s  $f12,a
+        l.s  $f2, a               # sum = a
+        l.s  $f12,a
         li   $v0, 2
         syscall
         la      $a0, newline    # new line
@@ -39,8 +40,8 @@ main:
 	la    $a0, valueb
         li    $v0, 4
         syscall
-        li.s $f4, b               # get b
-        li.s  $f12,b
+        l.s $f4, b               # get b
+        l.s  $f12,b
         li   $v0, 2
         syscall
         la      $a0, newline    # new line
@@ -53,8 +54,8 @@ main:
 	la    $a0, valuec
         li    $v0, 4
         syscall
-        li.s $f4, c               # get c
-        li.s  $f12,c
+        l.s $f4, c               # get c
+        l.s  $f12,c
         li   $v0, 2
         syscall
         la      $a0, newline    # new line
@@ -64,12 +65,12 @@ main:
         li    $v0, 4
         syscall
         add.s $f2, $f2, $f4       # sum = ax^2 + bx + c = 11.9
-        li.s  $f12, $f2
+        l.s  $f12, $f2
         li   $v0, 2
         syscall
 
 	
-       li.s  $f6, y
+       l.s  $f6, y
        c.lt.s $f2, $f6
 
        bc1t true_label

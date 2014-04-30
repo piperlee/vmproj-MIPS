@@ -16,8 +16,8 @@ strCR:		 .asciiz "\n"
 # The text segment -- instructions go here
 ##########################################	
 .text
-		.globl main
-main:
+		.globl __start
+__start:
 		# STEP 1 -- get the first operand
 		# Print a prompt asking user for input
 		li $v0, 4   # syscall number 4 will print string whose address is in $a0       

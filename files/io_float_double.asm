@@ -3,8 +3,9 @@
 ##      -- Input single and double,
 ##         print out the single and double. 
 ##         
-
-main:        
+.text
+.globl __start
+__start:        
         # Input the single and print
         la      $a0, insingle
         li      $v0, 4
